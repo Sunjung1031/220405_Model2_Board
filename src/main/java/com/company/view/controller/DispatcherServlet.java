@@ -1,11 +1,16 @@
 package com.company.view.controller;
 
 import java.io.IOException;
+import java.util.List;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
+import com.company.model2board.board.BoardDAO;
+import com.company.model2board.board.BoardDO;
 import com.company.model2board.user.UserDAO;
 import com.company.model2board.user.UserDO;
 
@@ -23,7 +28,7 @@ public class DispatcherServlet extends HttpServlet {
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-			request.setCharacterEncoding("UTF-8");	
+			request.setCharacterEncoding("EUC-KR");	
 			process(request, response);
 	}
 
@@ -53,10 +58,37 @@ public class DispatcherServlet extends HttpServlet {
 			
 			//3.화면 네비게이션 (포워딩)
 			if(user != null) {
-				System.out.println("로그인 성공");
+				//System.out.println("로그인 성공");
+				response.sendRedirect("getBoardList.do");
 			}else {
-				System.out.println("로그인 실패");
+				//System.out.println("로그인 실패");
 			}
+		}else if(path.equals("/getBoardList.do")) {
+			System.out.println("전체 게시글 목록 보기 처리됨!");
+			
+			String searchField = "";
+			String searchText = "";
+			
+			//사용자가 조건에 맞는 레코드 만을 검색하는 경우 
+			if(request.getParameter("searchCondition") != "" && 
+					request.getParameter("searchKeyword") != "") {
+				//1. 사용자 입력 정보 추출 
+				searchField = request.getParameter("searchCondition");
+				searchText = request.getParameter("searchKeyword");
+			}
+			//2. Model을 이용한 DB연동 처리 
+			BoardDAO boardDAO = new BoardDAO();
+			List<BoardDO> boardList = boardDAO.getBoardList(searchField, searchText);
+			
+			//3. [중요] board 테이블의 select 결과를 세션에 저장한다.
+			HttpSession session = request.getSession();
+			session.setAttribute("boardList", boardList);
+			
+			//4. 포워딩 => 
+			response.sendRedirect("getBoardList.jsp");{
+				
+			}
+			
 		}
 	}
 
