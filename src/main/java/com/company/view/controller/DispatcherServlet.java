@@ -23,73 +23,90 @@ public class DispatcherServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-			process(request, response);
+		process(request, response);
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-			request.setCharacterEncoding("EUC-KR");	
-			process(request, response);
+		request.setCharacterEncoding("EUC-KR");
+		process(request, response);
 	}
 
 	// 개발자 정의 메소드
-	private void process(HttpServletRequest request, 
-						 HttpServletResponse response) 
-					     throws IOException {
-		//1. 클라이언트의 요청 path 정보를 추출한다.
-		/* 아래 두 줄이 Model2 아키텍처 구조에서 가장 중요한 부분*/
+	private void process(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		// 1. 클라이언트의 요청 path 정보를 추출한다.
+		/* 아래 두 줄이 Model2 아키텍처 구조에서 가장 중요한 부분 */
 		// http://localhost:8080/Model2_Board/login.do
 
 		String uri = request.getRequestURI(); // "/Model2_Board/login.do"을 얻어옴
-		String path = uri.substring(uri.lastIndexOf("/")); // uri.lastIndexof("/")는 int로 받아 "13"을 얻어냄=>uri.substring(13)을 통해 "/login.do"을 얻어옴 
-		
-		if(path.equals("/login.do")) {
-			//1. 사용자 입력 정보 추출 
+		String path = uri.substring(uri.lastIndexOf("/")); // uri.lastIndexof("/")는 int로 받아 "13"을
+															// 얻어냄=>uri.substring(13)을 통해 "/login.do"을 얻어옴
+
+		if (path.equals("/login.do")) {
+			// 1. 사용자 입력 정보 추출
 			String id = request.getParameter("id");
 			String password = request.getParameter("password");
-			
-			//2. Model을 이용한 DB 연동 처리 
+
+			// 2. Model을 이용한 DB 연동 처리
 			UserDO userDO = new UserDO();
 			userDO.setId(id);
 			userDO.setPassword(password);
-			
+
 			UserDAO userDAO = new UserDAO();
 			UserDO user = userDAO.getUser(userDO);
-			
-			//3.화면 네비게이션 (포워딩)
-			if(user != null) {
-				//System.out.println("로그인 성공");
+
+			// 3.화면 네비게이션 (포워딩)
+			if (user != null) {
+				// System.out.println("로그인 성공");
+				HttpSession session = request.getSession();
+				session.setAttribute("Idkey", id);
 				response.sendRedirect("getBoardList.do");
-			}else {
-				//System.out.println("로그인 실패");
+			} else {
+				// System.out.println("로그인 실패");
+				response.sendRedirect("login.jsp");
 			}
-		}else if(path.equals("/getBoardList.do")) {
+		} else if (path.equals("/getBoardList.do")) {
 			System.out.println("전체 게시글 목록 보기 처리됨!");
-			
+
 			String searchField = "";
 			String searchText = "";
-			
-			//사용자가 조건에 맞는 레코드 만을 검색하는 경우 
-			if(request.getParameter("searchCondition") != "" && 
-					request.getParameter("searchKeyword") != "") {
-				//1. 사용자 입력 정보 추출 
+
+			// 사용자가 조건에 맞는 레코드 만을 검색하는 경우
+			if (request.getParameter("searchCondition") != "" && request.getParameter("searchKeyword") != "") {
+				// 1. 사용자 입력 정보 추출
 				searchField = request.getParameter("searchCondition");
 				searchText = request.getParameter("searchKeyword");
 			}
-			//2. Model을 이용한 DB연동 처리 
+			// 2. Model을 이용한 DB연동 처리
 			BoardDAO boardDAO = new BoardDAO();
 			List<BoardDO> boardList = boardDAO.getBoardList(searchField, searchText);
-			
-			//3. [중요] board 테이블의 select 결과를 세션에 저장한다.
+
+			// 3. [중요] board 테이블의 select 결과를 세션에 저장한다.
 			HttpSession session = request.getSession();
 			session.setAttribute("boardList", boardList);
-			
-			//4. 포워딩 => 
-			response.sendRedirect("getBoardList.jsp");{
-				
-			}
-			
-		}
-	}
 
+			// 4. 포워딩 =>
+			response.sendRedirect("getBoardList.jsp");
+		} else if (path.equals("/getBoard.do")) {
+			System.out.println("게시글 상세보기 처리됨!");
+			
+			//1. 검색할 게시글 번호 추출 
+			String seq = request.getParameter("seq");
+			
+			//2. Model을 이용한 DB연동 처리
+			BoardDO boardDO = new BoardDO();
+			boardDO.setSeq(Integer.parseInt(seq));
+			
+			BoardDAO boardDAO = new BoardDAO();
+			BoardDO board = boardDAO.getBoard(boardDO);
+			
+			// 3. [중요] board 테이블의 select 결과를 세션에 저장한다.
+			HttpSession session = request.getSession();
+			session.setAttribute("board", board );
+			
+			//4. 포워딩 =>응답 
+			response.sendRedirect("getBoard.jsp");
+		}
+
+	}
 }

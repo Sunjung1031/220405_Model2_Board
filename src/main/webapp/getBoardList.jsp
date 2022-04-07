@@ -6,6 +6,11 @@
 <% List<BoardDO> boardList =(List)session.getAttribute("boardList");%>
 
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+
+<%
+ 	int totalList = boardList.size();
+	request.setAttribute("totalList", totalList);
+%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -15,13 +20,13 @@
   #div_box{
   	position:absolute;
   	top:10%;
-  	left:40%;
+  	left:20%;
   }
 </Style>
 </head>
 <body>
 	<div id= "div_box">
-		<h3>${idkey}님 환영합니다.&nbsp;&nbsp;&nbsp;<a href="logout.do">로그아웃</a></h3>
+		<h3>${Idkey}님 환영합니다.&nbsp;&nbsp;&nbsp;<a href="logout.do">로그아웃</a></h3>
 		<form name="getBoardListForm" method="POST" action="getBoardList.do">
 			<p>총 게시글: ${totalList}건</p>
 			<table border="1" cellpadding="0" cellspacing="0" width="700">
